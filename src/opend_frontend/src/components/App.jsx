@@ -1,0 +1,21 @@
+import React from "react";
+import Header from "./Header";
+import Footer from "./Footer";
+import "bootstrap/dist/css/bootstrap.min.css";
+import homeImage from "../../public/home-img.png";
+import Item from "./Item";
+
+function App() {
+
+  const NFTID = "be2us-64aaa-aaaaa-qaabq-cai"; 
+  return (
+    <div className="App">
+      <Header />
+      <Item id = {NFTID}/>
+      {/* <img className="bottom-space" src={homeImage} /> */}
+      <Footer />
+    </div>
+  );
+}
+
+export default App;
