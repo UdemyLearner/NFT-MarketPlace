@@ -25,3 +25,6 @@ dist/
 
 # PocketIC
 pocket-ic
+
+/workspaces/icp-hello-world-motoko/opend
+opend
