@@ -10,6 +10,7 @@ function Minter() {
     console.log("hello");
     const name = data.name;
     const image = data.image[0];
+    const imageByBits = [...new Uint8Array(await image.arrayBuffer())];
   };
   return (
     <div className="minter-container">
