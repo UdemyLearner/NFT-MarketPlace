@@ -12,7 +12,7 @@ function Item(props) {
 
   const id = Principal.fromText(props.id);
   console.log(id);
-  const localHost = "https://turbo-space-memory-gvj94x6v77qcvq9w-4943.app.github.dev/";
+  const localHost = "https://turbo-space-memory-gvj94x6v77qcvq9w-4943.app.github.dev/?canisterId=br5f7-7uaaa-aaaaa-qaaca-cai&id=be2us-64aaa-aaaaa-qaabq-cai/";
 
   const agent = new HttpAgent({host:localHost});
   if (agent) {
