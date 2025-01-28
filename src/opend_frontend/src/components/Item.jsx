@@ -12,7 +12,7 @@ function Item(props) {
 
   const id = Principal.fromText(props.id);
   console.log(id);
-  const localHost = "https://127.0.0.1:4943/";
+  const localHost = "http://127.0.0.1:4943/";
 
   const agent = HttpAgent.createSync({host:localHost});
   if (agent) {
