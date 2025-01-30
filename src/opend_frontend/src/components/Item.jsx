@@ -10,7 +10,7 @@ function Item(props) {
   const [owner, setOwner] = React.useState();
   const [image, setImage] = React.useState();
 
-  const id = Principal.fromText(props.id);
+  const id = props.id;
   console.log(id);
   const localHost = "https://127.0.0.1:4943/";
 

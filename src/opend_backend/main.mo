@@ -43,8 +43,7 @@ actor OpenD {
             case null List.nil<Principal>();
             case (?result) result;
         };
-        
-        result List.toArray(userNFTs);
+        return List.toArray(userNFTs);
     };
 
 };
