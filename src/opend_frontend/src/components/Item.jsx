@@ -1,41 +1,47 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "../../public/logo.png";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { idlFactory } from "../../../declarations/nft/index";
 import { Principal } from "@dfinity/principal";
+import Button from "./Button";
+import { opend_backend } from "../../../declarations/opend_backend";
 
 function Item(props) {
 
   const [name, setName] = React.useState();
   const [owner, setOwner] = React.useState();
   const [image, setImage] = React.useState();
+  const [button, setButton] = useState();
+  const [priceInput, setPriceInput] = useState();
 
   const id = props.id;
-  console.log(id);
-  const localHost = "https://127.0.0.1:4943/";
+  const localHost = "https://turbo-space-memory-gvj94x6v77qcvq9w-4943.app.github.dev/";
 
-  const agent = HttpAgent.createSync({host:localHost});
-  if (agent) {
-    console.log(agent);
-  }
+  const agent = HttpAgent.createSync({ host: localHost });
 
+
+  agent.fetchRootKey();
+
+  let NFTActor;
 
   async function loadNFT() {
-    const NFTActor = await Actor.createActor( idlFactory, {
-      agent, 
-      canisterId : id,  
+    NFTActor = await Actor.createActor(idlFactory, {
+      agent,
+      canisterId: id,
     });
-    console.log(NFTActor);
-    
-    const name =(await NFTActor.getName());
+
+
+    const name = (await NFTActor.getName());
     const owner = await NFTActor.getOwner();
     const imageData = await NFTActor.getAssets();
     const imageContent = new Uint8Array(imageData);
-    const image = URL.createObjectURL(new Blob([imageContent.buffer],{type:"image/png"}));
-    
+    const image = URL.createObjectURL(new Blob([imageContent.buffer], { type: "image/png" }));
+
     setName(name);
     setOwner(owner.toText());
     setImage(image);
+
+    setButton(<Button handelClick={handleSell} text={"Sell"} />);
 
   };
 
@@ -43,7 +49,29 @@ function Item(props) {
     loadNFT();
   }, []);
 
+  let price;
+  function handleSell() {
+    setPriceInput(<input
+      placeholder="Price in DANG"
+      type="number"
+      className="price-input"
+      value={price}
+      onChange={(e) => price = e.target.value}
+    />);
+    setButton(<Button handelClick={sellItem} text={"Confirm"} />);
 
+  }
+
+  async function sellItem() {
+    const listingResult = await opend_backend.listItem(props.id, Number(price));
+    if (listingResult == "Success") {
+      console.log("Listing Success");
+      const openDId = await opend_backend.getOpenDCanisterId();
+      const transferResults = await NFTActor.transferOwnerShip(openDId); 
+      console.log(transferResults);
+       
+    }
+  }
 
   return (
     <div className="disGrid-item">
@@ -59,6 +87,8 @@ function Item(props) {
           <p className="disTypography-root makeStyles-bodyText-24 disTypography-body2 disTypography-colorTextSecondary">
             Owner: {owner}
           </p>
+          {priceInput}
+          {button}
         </div>
       </div>
     </div>

@@ -3,7 +3,9 @@ import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
 export interface _SERVICE {
+  'getOpenDCanisterId' : ActorMethod<[], Principal>,
   'getOwnedNFTs' : ActorMethod<[Principal], Array<Principal>>,
+  'listItem' : ActorMethod<[Principal, bigint], string>,
   'mint' : ActorMethod<[Uint8Array | number[], string], Principal>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
