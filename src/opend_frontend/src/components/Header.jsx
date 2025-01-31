@@ -6,15 +6,19 @@ import Minter from "./Minter";
 import Gallery from "./Gallery";
 import { opend_backend } from "../../../declarations/opend_backend";
 import CURRENT_USER_ID from "../main";
-
+ 
 function Header() {
 
   const [userOwnedGallery, setOwnedGallery] = useState();
+  const [listingGallery, setListingGallery] = useState();
 
   async function getNFTs() {
     const userNFTIds = await opend_backend.getOwnedNFTs(CURRENT_USER_ID);
     console.log(userNFTIds);
-    setOwnedGallery(<Gallery title="My NFT's" ids={userNFTIds} />);
+    setOwnedGallery(<Gallery title="My NFT's" ids={userNFTIds} role="collections" />);
+
+    const listedNFTIds = await opend_backend.getListedNFTs();
+    setListingGallery( <Gallery title="Discover" ids={listedNFTIds} key={2} role="discover" />)
   };
 
   useEffect(() => {
@@ -49,7 +53,7 @@ function Header() {
 
 
         <Route path="/discover">
-          <h1> Hello, From Discover</h1>
+          {listingGallery}
         </Route>
 
         <Route path="/minter">

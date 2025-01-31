@@ -5,6 +5,8 @@ import { idlFactory } from "../../../declarations/nft/index";
 import { Principal } from "@dfinity/principal";
 import Button from "./Button";
 import { opend_backend } from "../../../declarations/opend_backend";
+import CURRENT_USER_ID from "../main";
+import PriceLabel from "./PriceLabel";
 
 function Item(props) {
 
@@ -13,6 +15,11 @@ function Item(props) {
   const [image, setImage] = React.useState();
   const [button, setButton] = useState();
   const [priceInput, setPriceInput] = useState();
+  const [loaderHidden, setLoaderHidden] = useState(true);
+  const [blur, setBlur] = useState();
+  const [sellStatus, setSellStatus] = useState("");
+  const [priceLabel, setPriceLabel] = useState();
+  
 
   const id = props.id;
   const localHost = "https://turbo-space-memory-gvj94x6v77qcvq9w-4943.app.github.dev/";
@@ -21,6 +28,11 @@ function Item(props) {
 
 
   agent.fetchRootKey();
+
+  agent.fetchRootKey().catch(err => {
+    console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+    console.error(err);
+  });
 
   let NFTActor;
 
@@ -41,8 +53,25 @@ function Item(props) {
     setOwner(owner.toText());
     setImage(image);
 
-    setButton(<Button handelClick={handleSell} text={"Sell"} />);
+    if (props.role == "collections"){
+      const nftISListed = await opend_backend.isListed(props.id);
+      if (nftISListed){
+        setOwner("OpenD");
+        setBlur({filter: "blur(4px)"});
+        setSellStatus("Listed");
+      }else{
+        setButton(<Button handelClick={handleSell} text={"Sell"} />);
+      }
+    } else if (props.role == "discover"){
+      const originalOwner = await opend_backend.getOriginalOwner(props.id);
+      if (originalOwner != CURRENT_USER_ID.toText()){
+        setButton(<Button handelClick={handleBuy} text={"Buy"} />);
+      }
 
+      const price = await opend_backend.getListedNFTPrice(id);
+      setPriceLabel(<PriceLabel sellPrice={price.toString()} />);
+
+    }
   };
 
   React.useEffect(() => {
@@ -60,18 +89,31 @@ function Item(props) {
     />);
     setButton(<Button handelClick={sellItem} text={"Confirm"} />);
 
+  };
+
+  async function handleBuy(){
+    
   }
 
+
   async function sellItem() {
+    setBlur( {filter: "blur(4px)"} );
+    setLoaderHidden(false);
     const listingResult = await opend_backend.listItem(props.id, Number(price));
     if (listingResult == "Success") {
       console.log("Listing Success");
       const openDId = await opend_backend.getOpenDCanisterId();
-      const transferResults = await NFTActor.transferOwnerShip(openDId); 
+      const transferResults = await NFTActor.transferOwnerShip(openDId);
       console.log(transferResults);
-       
+      if (transferResults == "Success"){
+      setLoaderHidden(true);
+      setButton();
+      setPriceInput();
+      setOwner("OpenD");
+      setSellStatus("Listed");
     }
-  }
+    }
+  };
 
   return (
     <div className="disGrid-item">
@@ -79,10 +121,18 @@ function Item(props) {
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"
           src={image}
+          style = {blur}
         />
+        <div hidden={loaderHidden} className="lds-ellipsis">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
         <div className="disCardContent-root">
+          {priceLabel}
           <h2 className="disTypography-root makeStyles-bodyText-24 disTypography-h5 disTypography-gutterBottom">
-            {name} <span className="purple-text"></span>
+            {name} <span className="purple-text"> {sellStatus}</span>
           </h2>
           <p className="disTypography-root makeStyles-bodyText-24 disTypography-body2 disTypography-colorTextSecondary">
             Owner: {owner}
