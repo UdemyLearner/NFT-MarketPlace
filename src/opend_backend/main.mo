@@ -7,6 +7,7 @@ import HashMap "mo:base/HashMap";
 import List "mo:base/List";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Bool "mo:base/Bool";
 import NFTActorClass "../nft/nft";
 
 actor OpenD {
@@ -104,6 +105,31 @@ actor OpenD {
         };
         return listing.itemPrice;
 
+    };
+
+    public shared (msg) func completePurchase(id : Principal, ownerId : Principal, newOwnerId : Principal) : async Text {
+        var purchasedNFT : NFTActorClass.NFT = switch (mapOfNfts.get(id)) {
+            case null return "NFT does not Exits. ";
+            case (?result) result;
+        };
+        let transferResult = await purchasedNFT.transferOwnerShip(newOwnerId);
+        if (transferResult == "Success") {
+            mapOfListings.delete(id);
+            var ownedNFTs : List.List<Principal> = switch (mapOfOwners.get(ownerId)) {
+                case null List.nil<Principal>();
+                case (?result) result;
+            };
+            ownedNFTs := List.filter(
+                ownedNFTs,
+                func(listItemId : Principal) : Bool {
+                    return listItemId != id;
+                },
+            );
+            addToOwnershipMap(newOwnerId, id);
+        return "Success";
+        } else {
+            return transferResult;
+        }
     };
 
 };

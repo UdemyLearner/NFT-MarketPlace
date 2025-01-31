@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import logo from "../../public/logo.png";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import { idlFactory } from "../../../declarations/nft/index";
+import { idlFactory as tokenIDLFactory } from "../../../declarations/token";
 import { Principal } from "@dfinity/principal";
 import Button from "./Button";
 import { opend_backend } from "../../../declarations/opend_backend";
@@ -19,7 +20,8 @@ function Item(props) {
   const [blur, setBlur] = useState();
   const [sellStatus, setSellStatus] = useState("");
   const [priceLabel, setPriceLabel] = useState();
-  
+  const [shouldDisplay, setDisplay] = useState(true);
+
 
   const id = props.id;
   const localHost = "https://turbo-space-memory-gvj94x6v77qcvq9w-4943.app.github.dev/";
@@ -53,18 +55,18 @@ function Item(props) {
     setOwner(owner.toText());
     setImage(image);
 
-    if (props.role == "collections"){
+    if (props.role == "collections") {
       const nftISListed = await opend_backend.isListed(props.id);
-      if (nftISListed){
+      if (nftISListed) {
         setOwner("OpenD");
-        setBlur({filter: "blur(4px)"});
+        setBlur({ filter: "blur(4px)" });
         setSellStatus("Listed");
-      }else{
+      } else {
         setButton(<Button handelClick={handleSell} text={"Sell"} />);
       }
-    } else if (props.role == "discover"){
+    } else if (props.role == "discover") {
       const originalOwner = await opend_backend.getOriginalOwner(props.id);
-      if (originalOwner != CURRENT_USER_ID.toText()){
+      if (originalOwner != CURRENT_USER_ID.toText()) {
         setButton(<Button handelClick={handleBuy} text={"Buy"} />);
       }
 
@@ -91,13 +93,29 @@ function Item(props) {
 
   };
 
-  async function handleBuy(){
-    
+  async function handleBuy() {
+    console.log("handelBuy Was Triggered");
+    setLoaderHidden(false);
+
+    const tokenActor = await Actor.createActor(tokenIDLFactory, {
+      agent,
+      canisterId: Principal.fromText("bkyz2-fmaaa-aaaaa-qaaaq-cai")
+    });
+    const sellerId = await opend_backend.getOriginalOwner(props.id);
+    const itemPrice = await opend_backend.getListedNFTPrice(props.id);
+
+    const result = await tokenActor.transfer(sellerId, itemPrice);
+    if (result == "Success") {
+      const transferResult = await opend_backend.completePurchase(props.id, sellerId, CURRENT_USER_ID);
+      console.log("Purchase: " + transferResult);
+      setLoaderHidden(true);
+      setDisplay(false)
+    }
   }
 
 
   async function sellItem() {
-    setBlur( {filter: "blur(4px)"} );
+    setBlur({ filter: "blur(4px)" });
     setLoaderHidden(false);
     const listingResult = await opend_backend.listItem(props.id, Number(price));
     if (listingResult == "Success") {
@@ -105,23 +123,23 @@ function Item(props) {
       const openDId = await opend_backend.getOpenDCanisterId();
       const transferResults = await NFTActor.transferOwnerShip(openDId);
       console.log(transferResults);
-      if (transferResults == "Success"){
-      setLoaderHidden(true);
-      setButton();
-      setPriceInput();
-      setOwner("OpenD");
-      setSellStatus("Listed");
-    }
+      if (transferResults == "Success") {
+        setLoaderHidden(true);
+        setButton();
+        setPriceInput();
+        setOwner("OpenD");
+        setSellStatus("Listed");
+      }
     }
   };
 
   return (
-    <div className="disGrid-item">
+    <div style={{display: shouldDisplay ? "inline" : "none" }} className="disGrid-item">
       <div className="disPaper-root disCard-root makeStyles-root-17 disPaper-elevation1 disPaper-rounded">
         <img
           className="disCardMedia-root makeStyles-image-19 disCardMedia-media disCardMedia-img"
           src={image}
-          style = {blur}
+          style={blur}
         />
         <div hidden={loaderHidden} className="lds-ellipsis">
           <div></div>
